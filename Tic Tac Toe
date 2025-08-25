@@ -1,0 +1,59 @@
+def vacuum_world():
+    goal_state = {'A': '0', 'B': '0'}
+    cost = 0
+    location_input = input("Enter Location of Vacuum (A/B): ").strip().upper()
+    if location_input not in ('A', 'B'):
+        print("Invalid location"); return
+    status_input = input(f"Enter status of {location_input} (0=clean,1=dirty): ").strip()
+    other = 'B' if location_input == 'A' else 'A'
+    status_input_complement = input(f"Enter status of {other} (0=clean,1=dirty): ").strip()
+
+    print("Initial Goal State", goal_state)
+
+    if location_input == 'A':
+        print("Vacuum is placed in Location A")
+        if status_input == '1':
+            print("Location A is Dirty.")
+            goal_state['A'] = '0'
+            cost += 1
+            print("Cost:", cost)
+            print("Location A has been Cleaned.")
+        else:
+            print("Location A is already clean.")
+        if status_input_complement == '1':
+            print("Location B is Dirty.")
+            print("Moving RIGHT to Location B.")
+            cost += 1
+            print("Cost:", cost)
+            goal_state['B'] = '0'
+            cost += 1
+            print("Cost:", cost)
+            print("Location B has been Cleaned.")
+        else:
+            print("Location B is already clean.")
+    else:
+        print("Vacuum is placed in Location B")
+        if status_input == '1':
+            print("Location B is Dirty.")
+            goal_state['B'] = '0'
+            cost += 1
+            print("Cost:", cost)
+            print("Location B has been Cleaned.")
+        else:
+            print("Location B is already clean.")
+        if status_input_complement == '1':
+            print("Location A is Dirty.")
+            print("Moving LEFT to Location A.")
+            cost += 1
+            print("Cost:", cost)
+            goal_state['A'] = '0'
+            cost += 1
+            print("Cost:", cost)
+            print("Location A has been Cleaned.")
+        else:
+            print("Location A is already clean.")
+
+    print("GOAL STATE:", goal_state)
+    print("Performance Measurement:", cost)
+
+vacuum_world()
