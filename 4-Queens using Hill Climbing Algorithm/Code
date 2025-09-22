@@ -1,0 +1,102 @@
+import random
+
+def print_board(state):
+    """Prints the board configuration."""
+    n = len(state)
+    for row in range(n):
+        line = ""
+        for col in range(n):
+            if state[col] == row:
+                line += "Q "
+            else:
+                line += ". "
+        print(line)
+    print("\n")
+
+def calculate_attacking_pairs(state):
+    """Calculates the number of attacking queen pairs (heuristic cost)."""
+    attacking_pairs = 0
+    n = len(state)
+    # Iterate through each pair of queens
+    for i in range(n):
+        for j in range(i + 1, n):
+            # Check for horizontal attack (same row)
+            if state[i] == state[j]:
+                attacking_pairs += 1
+            # Check for diagonal attack
+            # If the difference in columns equals the difference in rows
+            if abs(i - j) == abs(state[i] - state[j]):
+                attacking_pairs += 1
+    return attacking_pairs
+
+def get_best_neighbor(state):
+    """Finds the neighbor with the lowest heuristic cost."""
+    best_neighbor = None
+    # Start with the cost of the current state
+    min_cost = calculate_attacking_pairs(state)
+    n = len(state)
+
+    # Iterate through each column
+    for col in range(n):
+        original_row = state[col]
+        # Iterate through each possible row for the queen in the current column
+        for row in range(n):
+            # If it's not the current position
+            if state[col] != row:
+                # Create a temporary neighbor state
+                neighbor = list(state)
+                neighbor[col] = row
+                
+                # Calculate the cost of the neighbor
+                cost = calculate_attacking_pairs(neighbor)
+                
+                # If this neighbor is better than the best found so far, update
+                if cost < min_cost:
+                    min_cost = cost
+                    best_neighbor = neighbor
+
+    return best_neighbor, min_cost
+
+
+def hill_climbing(n=4, max_restarts=100):
+    """
+    Solves the N-Queens problem using Hill Climbing with random restarts.
+    """
+    for restart in range(max_restarts):
+        # Start with a random initial state (one queen per column)
+        current_state = [random.randint(0, n - 1) for _ in range(n)]
+        
+        print(f"--- Restart #{restart + 1} ---")
+        print("Initial State:")
+        print_board(current_state)
+        
+        while True:
+            current_cost = calculate_attacking_pairs(current_state)
+            
+            # If the current state is a solution, we are done
+            if current_cost == 0:
+                print("Solution Found!")
+                print(f"Final State: {current_state}")
+                print_board(current_state)
+                print(f"Total Attacking Pairs: {current_cost}")
+                return current_state
+
+            # Find the best neighbor
+            best_neighbor, best_neighbor_cost = get_best_neighbor(current_state)
+            
+            print(f"Current State: {current_state}, Cost: {current_cost}")
+
+            # If no better neighbor is found, we have reached a local minimum
+            if best_neighbor is None or best_neighbor_cost >= current_cost:
+                print("Stuck in a local minimum. Restarting...")
+                break # Break to trigger a random restart
+            
+            # Move to the best neighbor
+            current_state = best_neighbor
+    
+    print("Failed to find a solution after maximum restarts.")
+    return None
+
+if __name__ == "__main__":
+    # Solve the 4-Queens problem
+    hill_climbing(n=4)
