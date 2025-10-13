@@ -1,0 +1,40 @@
+import math
+import random
+
+# Step 1: Objective Function
+def objective_function(x):
+    return x**2 + 10 * math.sin(x)
+
+# Step 2: Initialize Parameters
+T = 1000
+T_min = 1e-8
+alpha = 0.95
+bounds = (-10, 10)
+
+current_x = random.uniform(bounds[0], bounds[1])
+current_energy = objective_function(current_x)
+best_x, best_energy = current_x, current_energy
+
+# Step 3: Main Loop
+while T > T_min:
+    # Step 4: Generate Neighbor
+    new_x = current_x + random.uniform(-1, 1)
+    new_x = max(min(new_x, bounds[1]), bounds[0])
+    new_energy = objective_function(new_x)
+    
+    # Step 5: Compute ΔE
+    delta_E = new_energy - current_energy
+    
+    # Step 6: Acceptance Criterion
+    if delta_E < 0 or math.exp(-delta_E / T) > random.random():
+        current_x, current_energy = new_x, new_energy
+    
+    # Step 7: Update Best Solution
+    if current_energy < best_energy:
+        best_x, best_energy = current_x, current_energy
+    
+    # Step 8: Cooling
+    T = T * alpha
+
+# Step 9: Output Result
+print(f"Best solution: x = {best_x:.5f}, f(x) = {best_energy:.5f}")
