@@ -1,0 +1,28 @@
+import itertools
+
+propositions = ['P', 'Q']
+
+def KB(P, Q):
+    return ((not P) or Q) and P
+
+def query(P, Q):
+    return Q
+
+values = list(itertools.product([True, False], repeat=len(propositions)))
+
+entails = True
+print("P\tQ\tKB\tQuery")
+print("--------------------------")
+for val in values:
+    P, Q = val
+    kb_value = KB(P, Q)
+    q_value = query(P, Q)
+    print(f"{P}\t{Q}\t{kb_value}\t{q_value}")
+    if kb_value and not q_value:
+        entails = False
+
+print("\nDoes KB entail the query?")
+if entails:
+    print("✅ YES, the knowledge base entails the query.")
+else:
+    print("❌ NO, the knowledge base does NOT entail the query.")
