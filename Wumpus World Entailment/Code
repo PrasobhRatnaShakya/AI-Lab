@@ -1,0 +1,84 @@
+from itertools import product
+
+# -----------------------------
+# Evaluate propositional sentence
+# -----------------------------
+def PL_True(sentence, model):
+    if isinstance(sentence, str):  # atomic symbol
+        return model.get(sentence, None)
+   
+    op = sentence[0]
+    if op == 'not':
+        return not PL_True(sentence[1], model)
+    elif op == 'and':
+        return PL_True(sentence[1], model) and PL_True(sentence[2], model)
+    elif op == 'or':
+        return PL_True(sentence[1], model) or PL_True(sentence[2], model)
+    elif op == 'implies':
+        return (not PL_True(sentence[1], model)) or PL_True(sentence[2], model)
+    elif op == 'iff':
+        return PL_True(sentence[1], model) == PL_True(sentence[2], model)
+    else:
+        raise ValueError(f"Unknown operator: {op}")
+
+# -----------------------------
+# Recursive truth-table check
+# -----------------------------
+def Check_All(KB, alpha, symbols, model):
+    if not symbols:
+        if all(PL_True(s, model) for s in KB):
+            return PL_True(alpha, model)
+        else:
+            return True
+    P, *rest = symbols
+    m_true = model.copy(); m_true[P] = True
+    m_false = model.copy(); m_false[P] = False
+    return (Check_All(KB, alpha, rest, m_true) and
+            Check_All(KB, alpha, rest, m_false))
+
+# -----------------------------
+# Main entailment function
+# -----------------------------
+def Wumpus_Entailment(KB, alpha):
+    # Collect all symbols appearing in KB and alpha
+    symbols = set()
+
+    def extract_symbols(expr):
+        if isinstance(expr, str):
+            symbols.add(expr)
+        else:
+            for part in expr[1:]:
+                extract_symbols(part)
+   
+    for s in KB + [alpha]:
+        extract_symbols(s)
+   
+    return Check_All(KB, alpha, list(symbols), {})
+
+# -----------------------------
+# Example Wumpus KB
+# -----------------------------
+KB = [
+    ('not', 'P12'),
+    ('not', 'P21'),
+    ('not', 'W12'),
+    ('not', 'W21'),
+    ('not', 'P11'),
+    ('not', 'W11'),
+    ('implies', 'B21', ('or', 'P11', 'P22')),
+    ('implies', 'S21', ('or', 'W11', 'W22')),
+    'B21',
+    'S21'
+]
+
+# -----------------------------
+# Queries
+# -----------------------------
+query1 = 'P12'  # Is there a Pit at (1,2)?
+query2 = 'W22'  # Is there a Wumpus at (2,2)?
+
+# -----------------------------
+# Results
+# -----------------------------
+print("KB ⊨ P12 ?", Wumpus_Entailment(KB, query1))
+print("KB ⊨ W22 ?", Wumpus_Entailment(KB, query2))
