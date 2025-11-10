@@ -1,0 +1,74 @@
+def unify(x, y, subst=None):
+    if subst is None:
+        subst = {}
+
+    # Apply current substitutions
+    if isinstance(x, str) and x in subst:
+        return unify(subst[x], y, subst)
+    if isinstance(y, str) and y in subst:
+        return unify(x, subst[y], subst)
+
+    # Case 1: Both are identical
+    if x == y:
+        return subst
+
+    # Case 2: x is variable
+    if isinstance(x, str) and x.islower():
+        if occurs_check(x, y, subst):
+            return None  # Failure
+        subst[x] = y
+        return subst
+
+    # Case 3: y is variable
+    if isinstance(y, str) and y.islower():
+        if occurs_check(y, x, subst):
+            return None
+        subst[y] = x
+        return subst
+
+    # Case 4: Both are compound expressions (lists or tuples)
+    if isinstance(x, tuple) and isinstance(y, tuple):
+        if x[0] != y[0] or len(x) != len(y):
+            return None  # Function symbol mismatch
+        for a, b in zip(x[1:], y[1:]):
+            subst = unify(a, b, subst)
+            if subst is None:
+                return None
+        return subst
+
+    return None  # Failure in all other cases
+
+
+def occurs_check(var, expr, subst):
+    """Check if variable occurs inside expression (prevents circular substitution)."""
+    if var == expr:
+        return True
+    elif isinstance(expr, str) and expr in subst:
+        return occurs_check(var, subst[expr], subst)
+    elif isinstance(expr, tuple):
+        return any(occurs_check(var, e, subst) for e in expr)
+    return False
+
+
+# Helper to represent expressions conveniently
+def expr(s):
+    """Converts 'p(f(a), g(Y))' into nested tuples like ('p', ('f','a'), ('g','Y'))"""
+    s = s.replace(" ", "")
+    def parse(tokens):
+        if '(' not in tokens:
+            return tokens
+        name, rest = tokens.split("(", 1)
+        args = rest[:-1]  # remove last ')'
+        parts = []
+        depth, start = 0, 0
+        for i, ch in enumerate(args):
+            if ch == ',' and depth == 0:
+                parts.append(args[start:i])
+                start = i + 1
+            elif ch == '(':
+                depth += 1
+            elif ch == ')':
+                depth -= 1
+        parts.append(args[start:])
+        return tuple([name] + [parse(p) for p in parts])
+    return parse(s)
