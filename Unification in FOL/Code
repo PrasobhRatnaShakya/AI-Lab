@@ -1,8 +1,13 @@
+# -------------------------------
+# Unification Algorithm in Python
+# -------------------------------
+
 def unify(x, y, subst=None):
+    """Main unification function."""
     if subst is None:
         subst = {}
 
-    # Apply current substitutions
+    # Apply existing substitutions
     if isinstance(x, str) and x in subst:
         return unify(subst[x], y, subst)
     if isinstance(y, str) and y in subst:
@@ -15,7 +20,7 @@ def unify(x, y, subst=None):
     # Case 2: x is variable
     if isinstance(x, str) and x.islower():
         if occurs_check(x, y, subst):
-            return None  # Failure
+            return None  # Failure: circular reference
         subst[x] = y
         return subst
 
@@ -26,21 +31,24 @@ def unify(x, y, subst=None):
         subst[y] = x
         return subst
 
-    # Case 4: Both are compound expressions (lists or tuples)
+    # Case 4: Both are compound (functions/predicates)
     if isinstance(x, tuple) and isinstance(y, tuple):
+        # Different predicate names or different argument count ⇒ failure
         if x[0] != y[0] or len(x) != len(y):
-            return None  # Function symbol mismatch
+            return None
+        # Unify corresponding arguments
         for a, b in zip(x[1:], y[1:]):
             subst = unify(a, b, subst)
             if subst is None:
                 return None
         return subst
 
-    return None  # Failure in all other cases
+    # Otherwise → failure
+    return None
 
 
 def occurs_check(var, expr, subst):
-    """Check if variable occurs inside expression (prevents circular substitution)."""
+    """Check if variable occurs inside expression (prevents infinite recursion)."""
     if var == expr:
         return True
     elif isinstance(expr, str) and expr in subst:
@@ -50,10 +58,10 @@ def occurs_check(var, expr, subst):
     return False
 
 
-# Helper to represent expressions conveniently
 def expr(s):
-    """Converts 'p(f(a), g(Y))' into nested tuples like ('p', ('f','a'), ('g','Y'))"""
+    """Convert expression string like p(f(a), g(Y)) → nested tuple ('p', ('f','a'), ('g','Y'))"""
     s = s.replace(" ", "")
+
     def parse(tokens):
         if '(' not in tokens:
             return tokens
@@ -71,4 +79,27 @@ def expr(s):
                 depth -= 1
         parts.append(args[start:])
         return tuple([name] + [parse(p) for p in parts])
+
     return parse(s)
+
+
+# -------------------------------
+# Main Input / Output Section
+# -------------------------------
+if __name__ == "__main__":
+    print("=== Unification Algorithm ===")
+    expr1 = input("Enter first expression (e.g., p(f(a), g(Y))): ")
+    expr2 = input("Enter second expression (e.g., p(X, X)): ")
+
+    result = unify(expr(expr1), expr(expr2))
+
+    print("\n-----------------------------------")
+    print("Expression 1:", expr1)
+    print("Expression 2:", expr2)
+    print("-----------------------------------")
+
+    if result is None:
+        print("Unification failed ❌")
+    else:
+        print("Unification successful ✅")
+        print("Substitution Set (θ):", result)
